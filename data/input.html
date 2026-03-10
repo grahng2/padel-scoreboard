@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>⬡ PADEL SCORE — Input</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap');
+  :root {
+    --amber:#e8820c;--amber-light:#f5a623;--amber-glow:rgba(232,130,12,0.4);--amber-deep:#a85d00;
+    --blue:#00b4d8;--blue-light:#48cae4;--blue-glow:rgba(0,180,216,0.4);--blue-deep:#0077b6;
+    --court-green:#1a5c3a;--bg:#0a0e0d;--text:#e8ede9;--text-dim:#7a8a80;--danger:#e74c3c;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;min-height:100dvh}
+  .logo{font-family:'Orbitron',sans-serif;font-weight:900;letter-spacing:3px;color:var(--court-green);display:flex;align-items:center;gap:10px}
+  .logo .hex{color:#2ecc71}
+
+  /* CONNECTION STATUS */
+  .conn-bar{position:fixed;top:0;left:0;right:0;z-index:300;padding:6px 16px;background:rgba(231,76,60,.9);color:#fff;font-size:.75rem;text-align:center;letter-spacing:1px;transform:translateY(-100%);transition:transform .3s ease}
+  .conn-bar.show{transform:translateY(0)}
+
+  /* REGISTRATION */
+  .reg-screen{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;flex-direction:column;align-items:center;padding:28px 24px;overflow-y:auto;transition:opacity .5s ease,transform .5s ease}
+  .reg-screen.hidden{opacity:0;transform:translateY(20px);pointer-events:none}
+  .reg-logo{font-size:1.5rem;margin-bottom:4px}
+  .reg-subtitle{font-size:.8rem;color:var(--text-dim);letter-spacing:3px;text-transform:uppercase;margin-bottom:24px}
+  .reg-section-label{font-weight:600;font-size:.7rem;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;width:100%;text-align:left}
+  .mode-buttons{display:flex;gap:10px;width:100%;margin-bottom:20px}
+  .mode-btn{flex:1;padding:12px;border:2px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:var(--text);font-family:'Inter',sans-serif;font-weight:600;font-size:.9rem;border-radius:10px;cursor:pointer;transition:all .2s}
+  .mode-btn:hover{border-color:rgba(255,255,255,.25)}.mode-btn.selected{border-color:#2ecc71;background:rgba(46,204,113,.08);color:#2ecc71}
+  .team-card{width:100%;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+  .team-card.amber-card{background:linear-gradient(135deg,rgba(232,130,12,.06),transparent);border-color:rgba(232,130,12,.2)}
+  .team-card.blue-card{background:linear-gradient(135deg,rgba(0,180,216,.06),transparent);border-color:rgba(0,180,216,.2)}
+  .team-card-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .team-card-dot{width:10px;height:10px;border-radius:50%}
+  .team-card-dot.ad{background:var(--amber);box-shadow:0 0 8px var(--amber-glow)}
+  .team-card-dot.bd{background:var(--blue);box-shadow:0 0 8px var(--blue-glow)}
+  .team-card-title{font-weight:700;font-size:.8rem;letter-spacing:2px;text-transform:uppercase}
+  .team-card-title.at{color:var(--amber-light)}.team-card-title.bt{color:var(--blue-light)}
+  .reg-input{width:100%;padding:10px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:var(--text);font-family:'Inter',sans-serif;font-size:.9rem;margin-bottom:8px;outline:none;transition:border-color .2s}
+  .reg-input:focus{border-color:rgba(255,255,255,.3)}.reg-input::placeholder{color:var(--text-dim)}.reg-input:last-child{margin-bottom:0}
+  .join-btn{width:100%;padding:15px;background:linear-gradient(135deg,#2ecc71,#27ae60);border:none;border-radius:10px;color:#fff;font-family:'Inter',sans-serif;font-weight:700;font-size:1rem;letter-spacing:1px;cursor:pointer;transition:all .2s;text-transform:uppercase;margin-top:6px}
+  .join-btn:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(46,204,113,.3)}.join-btn:active{transform:translateY(0)}
+
+  /* SCORING */
+  .scoring-ui{display:flex;flex-direction:column;gap:12px;padding:20px;min-height:100vh;min-height:100dvh}
+  .scoring-ui.hidden{display:none}
+  .scoring-header{display:flex;justify-content:space-between;align-items:center}
+  .mini-scoreboard{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+  .mini-side{text-align:center;flex:1}
+  .mini-name{font-size:.7rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px}
+  .mini-name.at{color:var(--amber-light)}.mini-name.bt{color:var(--blue-light)}
+  .mini-score{font-family:'Bebas Neue',sans-serif;font-size:2rem;line-height:1}
+  .mini-games{font-size:.7rem;color:var(--text-dim)}
+  .mini-sets{font-size:.6rem;color:var(--text-dim);margin-top:2px;letter-spacing:1px}
+  .mini-vs{font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--text-dim);padding:0 8px}
+  .score-buttons{display:flex;gap:12px;flex:1;min-height:180px}
+  .score-btn{flex:1;border:none;border-radius:14px;font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:3px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+  .score-btn::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at center,rgba(255,255,255,.15),transparent 70%);opacity:0;transition:opacity .2s}
+  .score-btn:active::after{opacity:1}.score-btn:active{transform:scale(.97)}
+  .score-btn .btn-label{font-family:'Inter',sans-serif;font-size:.65rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;opacity:.8}
+  .score-btn.ab{background:linear-gradient(180deg,#c06d05,#8a4e00);color:#fff;box-shadow:0 4px 20px rgba(232,130,12,.2)}
+  .score-btn.bb{background:linear-gradient(180deg,#0090b0,#006080);color:#fff;box-shadow:0 4px 20px rgba(0,180,216,.2)}
+  .action-buttons{display:flex;gap:8px}
+  .action-btn{flex:1;padding:12px 8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:var(--text-dim);font-family:'Inter',sans-serif;font-size:.78rem;font-weight:500;border-radius:8px;cursor:pointer;transition:all .2s;text-align:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+  .action-btn:hover{border-color:rgba(255,255,255,.25);color:var(--text)}
+  .action-btn.danger-btn{border-color:rgba(231,76,60,.25);color:rgba(231,76,60,.7)}
+  .action-btn.danger-btn:hover{border-color:rgba(231,76,60,.5);color:var(--danger);background:rgba(231,76,60,.05)}
+  .edit-teams-btn{padding:7px 14px;font-size:.68rem;border:1px solid rgba(255,255,255,.08);background:transparent;color:var(--text-dim);border-radius:6px;cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:1px;text-transform:uppercase;transition:all .2s;-webkit-tap-highlight-color:transparent}
+  .edit-teams-btn:hover{border-color:rgba(255,255,255,.2);color:var(--text)}
+
+  /* Confirm overlay */
+  .confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:400;display:none;align-items:center;justify-content:center;padding:24px}
+  .confirm-overlay.show{display:flex}
+  .confirm-box{background:#1a1f1e;border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:28px 24px;text-align:center;max-width:320px;width:100%}
+  .confirm-msg{font-size:1rem;margin-bottom:20px;line-height:1.4}
+  .confirm-btns{display:flex;gap:10px}
+  .confirm-btns button{flex:1;padding:14px;border:none;border-radius:10px;font-family:'Inter',sans-serif;font-weight:700;font-size:.9rem;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+  .confirm-cancel{background:rgba(255,255,255,.08);color:var(--text-dim)}
+  .confirm-ok{background:var(--danger);color:#fff}
+
+  /* Match over banner on phone */
+  .match-over-banner{display:none;text-align:center;padding:16px;border-radius:10px;margin-bottom:8px}
+  .match-over-banner.show{display:block}
+  .match-over-banner.left-won{background:linear-gradient(135deg,rgba(232,130,12,.15),rgba(232,130,12,.05));border:1px solid rgba(232,130,12,.3)}
+  .match-over-banner.right-won{background:linear-gradient(135deg,rgba(0,180,216,.15),rgba(0,180,216,.05));border:1px solid rgba(0,180,216,.3)}
+  .match-over-banner .banner-text{font-family:'Orbitron',sans-serif;font-weight:700;font-size:1rem;letter-spacing:2px}
+</style>
+</head>
+<body>
+
+<div class="conn-bar" id="connBar">Connection lost — reconnecting...</div>
+
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-msg" id="confirmMsg"></div>
+    <div class="confirm-btns">
+      <button class="confirm-cancel" onclick="closeConfirm()">Cancel</button>
+      <button class="confirm-ok" id="confirmOk">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- REGISTRATION -->
+<div class="reg-screen" id="regScreen">
+  <div class="logo reg-logo"><span class="hex">⬡</span> PADEL SCORE</div>
+  <div class="reg-subtitle">Set up match</div>
+
+  <div class="reg-section-label">Match Type</div>
+  <div class="mode-buttons">
+    <button class="mode-btn selected" id="btnSingles" onclick="setMode('singles')">🎾 Singles</button>
+    <button class="mode-btn" id="btnDoubles" onclick="setMode('doubles')">🎾🎾 Doubles</button>
+  </div>
+
+  <div class="team-card amber-card">
+    <div class="team-card-header">
+      <div class="team-card-dot ad"></div>
+      <div class="team-card-title at">Left Court</div>
+    </div>
+    <input class="reg-input" id="regLeftName1" placeholder="Player 1 Name" autocomplete="off">
+    <input class="reg-input doubles-field" id="regLeftName2" placeholder="Player 2 Name" autocomplete="off" style="display:none">
+    <input class="reg-input" id="regLeftTeam" placeholder="Team Name (optional)" autocomplete="off">
+  </div>
+
+  <div class="team-card blue-card">
+    <div class="team-card-header">
+      <div class="team-card-dot bd"></div>
+      <div class="team-card-title bt">Right Court</div>
+    </div>
+    <input class="reg-input" id="regRightName1" placeholder="Player 1 Name" autocomplete="off">
+    <input class="reg-input doubles-field" id="regRightName2" placeholder="Player 2 Name" autocomplete="off" style="display:none">
+    <input class="reg-input" id="regRightTeam" placeholder="Team Name (optional)" autocomplete="off">
+  </div>
+
+  <button class="join-btn" id="joinBtn" onclick="startMatch()">Start Match</button>
+</div>
+
+<!-- SCORING -->
+<div class="scoring-ui hidden" id="scoringUI">
+  <div class="scoring-header">
+    <div class="logo" style="font-size:1rem"><span class="hex">⬡</span> PADEL SCORE</div>
+    <button class="edit-teams-btn" onclick="editTeams()">✏ Edit Teams</button>
+  </div>
+
+  <div class="match-over-banner" id="matchOverBanner">
+    <div class="banner-text" id="bannerText">🏆 MATCH OVER</div>
+  </div>
+
+  <div class="mini-scoreboard">
+    <div class="mini-side">
+      <div class="mini-name at" id="miniNameL">TEAM 1</div>
+      <div class="mini-score" id="miniScoreL" style="color:var(--amber-light)">0</div>
+      <div class="mini-games" id="miniGamesL">0 games</div>
+      <div class="mini-sets" id="miniSetsL"></div>
+    </div>
+    <div class="mini-vs">VS</div>
+    <div class="mini-side">
+      <div class="mini-name bt" id="miniNameR">TEAM 2</div>
+      <div class="mini-score" id="miniScoreR" style="color:var(--blue-light)">0</div>
+      <div class="mini-games" id="miniGamesR">0 games</div>
+      <div class="mini-sets" id="miniSetsR"></div>
+    </div>
+  </div>
+
+  <div class="score-buttons">
+    <button class="score-btn ab" id="scoreBtnL" onclick="sendScore(0)">
+      <span class="btn-label" id="scoreBtnLabelL">TEAM 1</span> POINT
+    </button>
+    <button class="score-btn bb" id="scoreBtnR" onclick="sendScore(1)">
+      <span class="btn-label" id="scoreBtnLabelR">TEAM 2</span> POINT
+    </button>
+  </div>
+
+  <div class="action-buttons">
+    <button class="action-btn" onclick="sendCmd('undo')">↩ Undo</button>
+    <button class="action-btn" onclick="sendReset()">↺ Reset</button>
+    <button class="action-btn danger-btn" onclick="sendFinish()">⏹ Finish</button>
+  </div>
+</div>
+
+<script>
+let ws = null;
+let reconnectTimer = null;
+let regMode = 'singles';
+let currentState = null;
+let localName = '';
+let isEditing = false;
+
+// ===== WEBSOCKET =====
+function connect() {
+  const host = location.hostname || '192.168.4.1';
+  ws = new WebSocket('ws://' + host + '/ws');
+
+  ws.onopen = function() {
+    document.getElementById('connBar').classList.remove('show');
+    ws.send('getState');
+  };
+
+  ws.onmessage = function(e) {
+    try {
+      const data = JSON.parse(e.data);
+      currentState = data;
+      handleStateUpdate(data);
+    } catch(err) {}
+  };
+
+  ws.onclose = function() {
+    document.getElementById('connBar').classList.add('show');
+    clearTimeout(reconnectTimer);
+    reconnectTimer = setTimeout(connect, 2000);
+  };
+
+  ws.onerror = function() { ws.close(); };
+}
+
+function sendCmd(cmd) {
+  if (ws && ws.readyState === WebSocket.OPEN) ws.send(cmd);
+}
+
+function sendScore(side) {
+  if (currentState && currentState.matchOver) return;
+  sendCmd('score:' + side + ':' + (localName || 'Scorer'));
+}
+
+function showConfirm(msg, onOk) {
+  document.getElementById('confirmMsg').textContent = msg;
+  var okBtn = document.getElementById('confirmOk');
+  okBtn.onclick = function() { closeConfirm(); onOk(); };
+  document.getElementById('confirmOverlay').classList.add('show');
+}
+
+function closeConfirm() {
+  document.getElementById('confirmOverlay').classList.remove('show');
+}
+
+function sendReset() {
+  showConfirm('Reset the entire match? Scores will be cleared.', function() { sendCmd('reset'); });
+}
+
+function sendFinish() {
+  showConfirm('Finish this match and return to the home screen?', function() { sendCmd('finish'); });
+}
+
+// ===== STATE HANDLER =====
+function handleStateUpdate(s) {
+  // If match is started and we're not editing, skip to scoring
+  if (s.matchStarted && !isEditing) {
+    showScoring();
+  } else if (!s.matchStarted) {
+    showRegistration();
+  }
+  updateScoringUI(s);
+}
+
+function showScoring() {
+  document.getElementById('regScreen').classList.add('hidden');
+  setTimeout(function() {
+    document.getElementById('regScreen').style.display = 'none';
+    document.getElementById('scoringUI').classList.remove('hidden');
+  }, 300);
+}
+
+function showRegistration() {
+  document.getElementById('scoringUI').classList.add('hidden');
+  const reg = document.getElementById('regScreen');
+  reg.style.display = '';
+  setTimeout(function() { reg.classList.remove('hidden'); }, 10);
+  document.getElementById('joinBtn').textContent = 'Start Match';
+  document.getElementById('joinBtn').onclick = startMatch;
+}
+
+function updateScoringUI(s) {
+  const nl = s.nameLeft || 'TEAM 1';
+  const nr = s.nameRight || 'TEAM 2';
+  const pl = s.pointsDisplay ? s.pointsDisplay[0] : '0';
+  const pr = s.pointsDisplay ? s.pointsDisplay[1] : '0';
+
+  document.getElementById('miniNameL').textContent = nl;
+  document.getElementById('miniNameR').textContent = nr;
+  document.getElementById('miniScoreL').textContent = pl;
+  document.getElementById('miniScoreR').textContent = pr;
+  document.getElementById('miniGamesL').textContent = s.games[0] + ' games';
+  document.getElementById('miniGamesR').textContent = s.games[1] + ' games';
+  document.getElementById('scoreBtnLabelL').textContent = nl;
+  document.getElementById('scoreBtnLabelR').textContent = nr;
+
+  // Set scores
+  let setsL = '', setsR = '';
+  for (let i = 0; i < s.currentSet; i++) {
+    setsL += (i > 0 ? '  ' : '') + 'S' + (i+1) + ': ' + s.sets[0][i];
+    setsR += (i > 0 ? '  ' : '') + 'S' + (i+1) + ': ' + s.sets[1][i];
+  }
+  document.getElementById('miniSetsL').textContent = setsL;
+  document.getElementById('miniSetsR').textContent = setsR;
+
+  // Match over banner
+  const banner = document.getElementById('matchOverBanner');
+  if (s.matchOver) {
+    banner.classList.add('show');
+    banner.classList.remove('left-won', 'right-won');
+    banner.classList.add(s.winner === 0 ? 'left-won' : 'right-won');
+    const wname = s.winner === 0 ? nl : nr;
+    document.getElementById('bannerText').textContent = '🏆 ' + wname + ' WINS!';
+    document.getElementById('bannerText').style.color = s.winner === 0 ? 'var(--amber-light)' : 'var(--blue-light)';
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
+// ===== REGISTRATION =====
+function setMode(mode) {
+  regMode = mode;
+  document.getElementById('btnSingles').classList.toggle('selected', mode === 'singles');
+  document.getElementById('btnDoubles').classList.toggle('selected', mode === 'doubles');
+  var fields = document.querySelectorAll('.doubles-field');
+  for (var i = 0; i < fields.length; i++) {
+    fields[i].style.display = mode === 'doubles' ? '' : 'none';
+  }
+}
+
+function startMatch() {
+  var payload = JSON.stringify({
+    mode: regMode,
+    leftName1:  document.getElementById('regLeftName1').value.trim() || 'Player 1',
+    leftName2:  document.getElementById('regLeftName2').value.trim() || '',
+    leftTeam:   document.getElementById('regLeftTeam').value.trim() || '',
+    rightName1: document.getElementById('regRightName1').value.trim() || 'Player 2',
+    rightName2: document.getElementById('regRightName2').value.trim() || '',
+    rightTeam:  document.getElementById('regRightTeam').value.trim() || ''
+  });
+  localName = document.getElementById('regLeftName1').value.trim() || 'Scorer';
+  isEditing = false;
+  sendCmd('startMatch:' + payload);
+}
+
+function editTeams() {
+  isEditing = true;
+  if (currentState) {
+    var sl = currentState.sides ? currentState.sides.left : null;
+    var sr = currentState.sides ? currentState.sides.right : null;
+    if (sl) {
+      document.getElementById('regLeftName1').value = sl.names[0] || '';
+      document.getElementById('regLeftName2').value = sl.names[1] || '';
+      document.getElementById('regLeftTeam').value = sl.teamName || '';
+      setMode(sl.type || 'singles');
+    }
+    if (sr) {
+      document.getElementById('regRightName1').value = sr.names[0] || '';
+      document.getElementById('regRightName2').value = sr.names[1] || '';
+      document.getElementById('regRightTeam').value = sr.teamName || '';
+    }
+  }
+  document.getElementById('joinBtn').textContent = 'Save Teams';
+  document.getElementById('joinBtn').onclick = saveTeamEdits;
+  document.getElementById('scoringUI').classList.add('hidden');
+  var reg = document.getElementById('regScreen');
+  reg.style.display = '';
+  setTimeout(function() { reg.classList.remove('hidden'); }, 10);
+}
+
+function saveTeamEdits() {
+  var payload = JSON.stringify({
+    mode: regMode,
+    leftName1:  document.getElementById('regLeftName1').value.trim() || 'Player 1',
+    leftName2:  document.getElementById('regLeftName2').value.trim() || '',
+    leftTeam:   document.getElementById('regLeftTeam').value.trim() || '',
+    rightName1: document.getElementById('regRightName1').value.trim() || 'Player 2',
+    rightName2: document.getElementById('regRightName2').value.trim() || '',
+    rightTeam:  document.getElementById('regRightTeam').value.trim() || ''
+  });
+  isEditing = false;
+  sendCmd('editTeams:' + payload);
+
+  document.getElementById('joinBtn').textContent = 'Start Match';
+  document.getElementById('joinBtn').onclick = startMatch;
+  showScoring();
+}
+
+// ===== INIT =====
+connect();
+</script>
+</body>
+</html>

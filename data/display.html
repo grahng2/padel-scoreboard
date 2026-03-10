@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>⬡ PADEL SCORE — Display</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap');
+  :root {
+    --amber:#e8820c;--amber-light:#f5a623;--amber-glow:rgba(232,130,12,0.4);--amber-deep:#a85d00;
+    --blue:#00b4d8;--blue-light:#48cae4;--blue-glow:rgba(0,180,216,0.4);--blue-deep:#0077b6;
+    --court-green:#1a5c3a;--court-line:rgba(255,255,255,0.85);
+    --bg:#0a0e0d;--text:#e8ede9;--text-dim:#7a8a80;--gold:#ffd700;--net:#ccc;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;overflow:hidden;height:100vh;width:100vw}
+  .logo{font-family:'Orbitron',sans-serif;font-weight:900;letter-spacing:3px;color:var(--court-green);display:flex;align-items:center;gap:10px}
+  .logo .hex{color:#2ecc71}
+
+  /* IDLE SCREEN */
+  .idle-screen{position:absolute;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;transition:opacity .8s ease}
+  .idle-screen.hidden{opacity:0;pointer-events:none}
+  .idle-logo{font-size:4rem;margin-bottom:14px}
+  .idle-subtitle{font-size:1.1rem;color:var(--text-dim);letter-spacing:5px;text-transform:uppercase;margin-bottom:50px}
+  .qr-box{text-align:center;margin-bottom:50px}
+  .qr-box canvas{border-radius:10px}
+  .qr-label{margin-top:14px;font-size:1rem;color:var(--text-dim);letter-spacing:3px;text-transform:uppercase}
+  .wifi-info{display:flex;align-items:center;gap:10px;color:var(--text-dim);font-size:1rem}
+  .wifi-info svg{width:24px;height:24px;fill:var(--text-dim)}
+  .idle-particles{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+  .particle{position:absolute;width:3px;height:3px;background:var(--court-green);border-radius:50%;opacity:.3;animation:floatUp 8s linear infinite}
+  @keyframes floatUp{0%{transform:translateY(100vh) scale(0);opacity:0}10%{opacity:.3}90%{opacity:.3}100%{transform:translateY(-20px) scale(1);opacity:0}}
+
+  /* CONNECTION STATUS */
+  .conn-status{position:fixed;top:12px;right:16px;z-index:200;display:flex;align-items:center;gap:6px;font-size:.7rem;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);opacity:.6}
+  .conn-dot{width:8px;height:8px;border-radius:50%;background:#e74c3c;transition:background .3s}
+  .conn-dot.ok{background:#2ecc71}
+
+  /* COURT */
+  .court-wrapper{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;transition:opacity .6s ease}
+  .court-wrapper.hidden{opacity:0;pointer-events:none}
+  .display-header{width:100%;display:flex;justify-content:space-between;align-items:center;padding:0 30px 18px 30px}
+  .display-header .logo{font-size:1.6rem}
+  .set-history{display:flex;gap:10px;align-items:center}
+  .set-box{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:6px 14px;font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text-dim)}
+  .set-box.active{color:var(--text);border-color:rgba(255,255,255,.3)}
+  .set-box .sep{margin:0 4px;opacity:.4}
+
+  .court{position:relative;width:min(92%,900px);aspect-ratio:10/6;border-radius:8px;overflow:hidden;box-shadow:0 0 80px rgba(26,92,58,.15),0 6px 40px rgba(0,0,0,.5),inset 0 0 100px rgba(0,0,0,.2)}
+  .court-surface{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent,transparent 49.9%,rgba(0,0,0,.02) 50%,rgba(0,0,0,.02) 50.1%),linear-gradient(180deg,#1b6b42,#17583a 50%,#145030)}
+  .court-surface::after{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='4' height='4' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='1' height='1' fill='rgba(0,0,0,0.08)'/%3E%3C/svg%3E");opacity:.5}
+  .court-half{position:absolute;top:0;bottom:0;width:50%;transition:opacity .6s,filter .6s}
+  .court-half.left{left:0;background:linear-gradient(135deg,rgba(232,130,12,.08),transparent 60%);border-left:5px solid var(--amber)}
+  .court-half.right{right:0;background:linear-gradient(225deg,rgba(0,180,216,.08),transparent 60%);border-right:5px solid var(--blue)}
+  .court-lines{position:absolute;inset:0;pointer-events:none}
+  .cl{position:absolute;background:var(--court-line)}
+  .cl-t{top:0;left:0;right:0;height:3px}.cl-b{bottom:0;left:0;right:0;height:3px}
+  .cl-l{top:0;left:0;bottom:0;width:3px}.cl-r{top:0;right:0;bottom:0;width:3px}
+  .cl-sm{top:25%;left:15%;right:15%;height:2px}.cl-sm2{bottom:25%;left:15%;right:15%;height:2px}
+  .cl-sl{left:15%;top:0;bottom:0;width:2px}.cl-sr{right:15%;top:0;bottom:0;width:2px}
+  .cl-cv{left:calc(50% - 1px);top:25%;height:50%;width:2px}
+  .net{position:absolute;left:calc(50% - 2px);top:-2px;bottom:-2px;width:4px;background:repeating-linear-gradient(180deg,var(--net) 0px,var(--net) 3px,transparent 3px,transparent 6px);box-shadow:0 0 14px rgba(255,255,255,.15);z-index:5}
+  .net::before,.net::after{content:'';position:absolute;left:-3px;width:10px;height:6px;background:#888;border-radius:2px}
+  .net::before{top:-1px}.net::after{bottom:-1px}
+  .wall{position:absolute;z-index:2}
+  .wl{left:0;top:0;bottom:0;width:7px;background:linear-gradient(180deg,var(--amber),var(--amber-deep));box-shadow:3px 0 25px var(--amber-glow)}
+  .wr{right:0;top:0;bottom:0;width:7px;background:linear-gradient(180deg,var(--blue),var(--blue-deep));box-shadow:-3px 0 25px var(--blue-glow)}
+  .wt{top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,var(--amber),var(--court-line) 50%,var(--blue))}
+  .wb{bottom:0;left:0;right:0;height:5px;background:linear-gradient(90deg,var(--amber),var(--court-line) 50%,var(--blue))}
+
+  .court-player-info{position:absolute;top:0;bottom:0;width:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;pointer-events:none}
+  .court-player-info.left{left:0}.court-player-info.right{right:0}
+  .player-name{font-family:'Inter',sans-serif;font-weight:700;font-size:1.3rem;text-transform:uppercase;letter-spacing:4px;opacity:.9;text-shadow:0 2px 10px rgba(0,0,0,.5);margin-bottom:8px;text-align:center;padding:0 16px}
+  .player-name.ln{color:var(--amber-light)}.player-name.rn{color:var(--blue-light)}
+  .court-games{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:2px;opacity:.7;text-shadow:0 1px 6px rgba(0,0,0,.5)}
+  .court-points{font-family:'Bebas Neue',sans-serif;font-size:7.5rem;line-height:1;text-shadow:0 6px 30px rgba(0,0,0,.5);transition:transform .15s,color .15s}
+  .court-points.lp{color:var(--amber-light)}.court-points.rp{color:var(--blue-light)}
+  .court-points.tiebreak{color:var(--gold)!important}
+  .court-points.pop{animation:pointPop .4s ease}
+  @keyframes pointPop{0%{transform:scale(1)}30%{transform:scale(1.3)}100%{transform:scale(1)}}
+  .serve-indicator{width:16px;height:16px;border-radius:50%;background:var(--gold);box-shadow:0 0 14px rgba(255,215,0,.6);margin-top:12px;animation:servePulse 2s ease-in-out infinite}
+  .serve-indicator.hidden{visibility:hidden}
+  @keyframes servePulse{0%,100%{transform:scale(1);box-shadow:0 0 14px rgba(255,215,0,.6)}50%{transform:scale(1.2);box-shadow:0 0 24px rgba(255,215,0,.8)}}
+  .scored-by{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);font-size:.85rem;color:var(--text-dim);opacity:0;z-index:20;white-space:nowrap}
+  .scored-by.show{animation:fadeInOut 2.5s ease}
+  @keyframes fadeInOut{0%{opacity:0}15%{opacity:1}75%{opacity:1}100%{opacity:0}}
+  .winner-overlay{position:absolute;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .6s}
+  .winner-overlay.show{opacity:1;pointer-events:auto}
+  .wgl,.wgr{position:absolute;top:0;bottom:0;width:50%}
+  .wgl{left:0}.wgr{right:0}
+  .wgl.won{background:rgba(232,130,12,.15);animation:glowPulse 1.5s ease-in-out infinite}
+  .wgr.won{background:rgba(0,180,216,.15);animation:glowPulse 1.5s ease-in-out infinite}
+  .wgl.lost,.wgr.lost{background:rgba(0,0,0,.5)}
+  @keyframes glowPulse{0%,100%{opacity:.5}50%{opacity:1}}
+  .winner-text{font-family:'Orbitron',sans-serif;font-size:3rem;font-weight:900;letter-spacing:8px;text-transform:uppercase;text-shadow:0 0 50px rgba(255,255,255,.3);z-index:51}
+</style>
+</head>
+<body>
+
+<div class="conn-status"><div class="conn-dot" id="connDot"></div><span id="connLabel">Connecting...</span></div>
+
+<!-- IDLE SCREEN -->
+<div class="idle-screen" id="idleScreen">
+  <div class="idle-particles" id="particles"></div>
+  <div class="logo idle-logo"><span class="hex">⬡</span> PADEL SCORE</div>
+  <div class="idle-subtitle">No players connected</div>
+  <div class="qr-box">
+    <div id="qrInput"></div>
+    <div class="qr-label">Scan to Connect</div>
+  </div>
+  <div class="wifi-info">
+    <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3a4.237 4.237 0 00-6 0zm-4-4l2 2a7.074 7.074 0 0110 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+    Padel-Court-1
+  </div>
+</div>
+
+<!-- COURT VIEW -->
+<div class="court-wrapper hidden" id="courtWrapper">
+  <div class="display-header">
+    <div class="logo" style="font-size:1.4rem"><span class="hex">⬡</span> PADEL SCORE</div>
+    <div class="set-history" id="setHistory"></div>
+  </div>
+  <div class="court">
+    <div class="court-surface"></div>
+    <div class="court-half left"></div>
+    <div class="court-half right"></div>
+    <div class="court-lines">
+      <div class="cl cl-t"></div><div class="cl cl-b"></div><div class="cl cl-l"></div><div class="cl cl-r"></div>
+      <div class="cl cl-sm"></div><div class="cl cl-sm2"></div><div class="cl cl-sl"></div><div class="cl cl-sr"></div>
+      <div class="cl cl-cv"></div>
+    </div>
+    <div class="net"></div>
+    <div class="wall wl"></div><div class="wall wr"></div><div class="wall wt"></div><div class="wall wb"></div>
+    <div class="court-player-info left">
+      <div class="player-name ln" id="nameLeft">TEAM 1</div>
+      <div class="court-games" id="gamesLeft">GAMES: 0</div>
+      <div class="court-points lp" id="ptsLeft">0</div>
+      <div class="serve-indicator hidden" id="serveLeft"></div>
+    </div>
+    <div class="court-player-info right">
+      <div class="player-name rn" id="nameRight">TEAM 2</div>
+      <div class="court-games" id="gamesRight">GAMES: 0</div>
+      <div class="court-points rp" id="ptsRight">0</div>
+      <div class="serve-indicator hidden" id="serveRight"></div>
+    </div>
+    <div class="scored-by" id="scoredBy"></div>
+    <div class="winner-overlay" id="winnerOverlay">
+      <div class="wgl" id="winGlowL"></div>
+      <div class="wgr" id="winGlowR"></div>
+      <div class="winner-text" id="winnerText"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== STATIC WIFI QR CODE =====
+// Pre-encoded QR for "WIFI:T:nopass;S:Padel-Court-1;;" rendered as SVG
+(function(){
+  // QR matrix for WIFI:T:nopass;S:Padel-Court-1;; (version 3, M correction, 29x29)
+  var d=[1,1,1,1,1,1,1,0,0,1,1,1,1,0,0,1,1,0,0,1,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,1,1,0,1,1,1,0,1,0,1,0,1,1,0,0,1,0,1,1,1,0,1,0,1,0,1,1,1,0,1,1,0,1,1,1,0,1,0,1,1,1,0,0,0,0,0,1,1,0,0,1,0,1,0,1,1,1,0,1,1,0,1,1,1,0,1,0,1,0,0,0,0,1,1,1,0,0,0,0,1,0,1,0,1,1,1,0,1,1,0,0,0,0,0,1,0,1,1,0,0,0,1,1,1,1,1,0,1,0,0,1,0,0,0,0,0,1,1,1,1,1,1,1,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,0,1,1,1,1,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,1,1,1,1,1,0,0,0,0,1,0,0,1,1,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,1,0,0,0,0,0,0,1,0,1,0,0,0,1,1,0,0,0,1,0,1,0,1,1,0,0,1,0,1,1,1,1,1,1,1,0,0,1,0,0,0,0,0,0,1,0,1,0,1,0,1,0,0,1,0,1,1,0,1,1,0,0,0,0,1,1,0,0,1,0,1,0,1,0,0,1,1,0,1,1,1,1,0,0,1,0,0,0,1,0,1,1,1,1,1,1,1,0,0,0,0,1,1,1,0,1,1,1,1,0,0,1,1,1,1,1,0,1,1,0,0,0,1,1,0,1,1,1,1,1,0,0,1,0,1,0,1,0,1,1,1,1,1,1,0,0,1,0,0,1,0,0,1,0,1,0,1,1,1,1,1,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,1,1,1,0,1,0,0,0,1,1,0,0,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,0,1,0,0,0,1,1,0,0,0,0,0,1,0,1,1,0,0,0,0,1,0,0,0,1,0,0,1,0,1,0,0,1,0,0,1,1,0,1,0,1,0,1,0,1,0,0,1,1,1,0,0,0,0,0,1,0,1,0,0,0,1,0,0,0,0,1,1,0,0,1,0,0,0,1,0,1,0,1,0,1,0,1,1,0,1,0,1,0,0,0,0,1,0,1,1,1,1,1,0,1,1,1,0,1,0,1,1,0,0,0,0,1,1,0,1,1,0,1,1,0,0,0,0,0,0,0,1,1,1,1,1,0,0,1,1,0,0,0,0,0,0,0,0,1,1,1,0,1,1,1,1,0,0,0,1,1,0,0,0,1,1,0,0,0,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,0,1,1,0,1,0,1,0,1,0,1,0,1,1,0,0,0,0,0,1,0,1,0,1,1,0,1,0,1,0,0,0,0,1,0,0,0,1,1,1,0,1,1,0,1,1,1,0,1,0,1,1,1,0,1,0,1,1,1,0,1,0,1,1,1,1,1,0,1,1,0,1,0,1,1,1,0,1,0,1,1,0,1,0,1,0,0,0,0,0,0,1,1,1,0,1,1,0,1,0,1,0,1,1,1,0,1,0,1,0,1,0,1,0,1,0,1,1,1,1,0,1,1,0,1,0,1,1,0,1,0,0,0,0,0,1,0,0,1,0,0,0,1,1,0,0,1,0,0,0,0,0,1,0,1,1,1,1,1,1,1,1,1,1,0,1,0,0,0,1,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0];
+  var size=29,scale=6,padding=16;
+  var total=size*scale+padding*2;
+  var svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+total+'" height="'+total+'" viewBox="0 0 '+total+' '+total+'">';
+  svg+='<rect width="'+total+'" height="'+total+'" fill="#0a0e0d" rx="10"/>';
+  for(var y=0;y<size;y++)for(var x=0;x<size;x++)if(d[y*size+x])svg+='<rect x="'+(padding+x*scale)+'" y="'+(padding+y*scale)+'" width="'+scale+'" height="'+scale+'" fill="#2ecc71"/>';
+  svg+='</svg>';
+  document.getElementById('qrInput').innerHTML=svg;
+})();
+
+// ===== PARTICLES =====
+(function(){
+  const c = document.getElementById('particles');
+  for(let i=0;i<30;i++){const p=document.createElement('div');p.className='particle';p.style.left=Math.random()*100+'%';p.style.animationDelay=Math.random()*8+'s';p.style.animationDuration=(6+Math.random()*6)+'s';c.appendChild(p)}
+})();
+
+// ===== WEBSOCKET =====
+let ws = null;
+let reconnectTimer = null;
+let lastState = null;
+
+function connect() {
+  const host = location.hostname || '192.168.4.1';
+  ws = new WebSocket('ws://' + host + '/ws');
+
+  ws.onopen = function() {
+    document.getElementById('connDot').classList.add('ok');
+    document.getElementById('connLabel').textContent = 'Connected';
+    ws.send('getState');
+  };
+
+  ws.onmessage = function(e) {
+    try {
+      const data = JSON.parse(e.data);
+      lastState = data;
+      updateDisplay(data);
+    } catch(err) {}
+  };
+
+  ws.onclose = function() {
+    document.getElementById('connDot').classList.remove('ok');
+    document.getElementById('connLabel').textContent = 'Reconnecting...';
+    clearTimeout(reconnectTimer);
+    reconnectTimer = setTimeout(connect, 2000);
+  };
+
+  ws.onerror = function() {
+    ws.close();
+  };
+}
+
+function updateDisplay(s) {
+  const idle = document.getElementById('idleScreen');
+  const court = document.getElementById('courtWrapper');
+
+  if (s.matchStarted) {
+    idle.classList.add('hidden');
+    court.classList.remove('hidden');
+  } else {
+    idle.classList.remove('hidden');
+    court.classList.add('hidden');
+    return;
+  }
+
+  // Names
+  document.getElementById('nameLeft').textContent = s.nameLeft || 'TEAM 1';
+  document.getElementById('nameRight').textContent = s.nameRight || 'TEAM 2';
+  document.getElementById('gamesLeft').textContent = 'GAMES: ' + s.games[0];
+  document.getElementById('gamesRight').textContent = 'GAMES: ' + s.games[1];
+
+  // Points with pop animation
+  const ptsL = document.getElementById('ptsLeft');
+  const ptsR = document.getElementById('ptsRight');
+  const lpd = s.pointsDisplay ? s.pointsDisplay[0] : '0';
+  const rpd = s.pointsDisplay ? s.pointsDisplay[1] : '0';
+
+  if (ptsL.textContent !== lpd) {
+    ptsL.textContent = lpd;
+    ptsL.classList.remove('pop'); void ptsL.offsetWidth; ptsL.classList.add('pop');
+  }
+  if (ptsR.textContent !== rpd) {
+    ptsR.textContent = rpd;
+    ptsR.classList.remove('pop'); void ptsR.offsetWidth; ptsR.classList.add('pop');
+  }
+  ptsL.classList.toggle('tiebreak', s.tiebreak);
+  ptsR.classList.toggle('tiebreak', s.tiebreak);
+
+  // Serve
+  document.getElementById('serveLeft').classList.toggle('hidden', s.serving !== 0);
+  document.getElementById('serveRight').classList.toggle('hidden', s.serving !== 1);
+
+  // Set history
+  let setHtml = '';
+  for (let i = 0; i <= 2; i++) {
+    if (i <= s.currentSet) {
+      const active = i === s.currentSet ? ' active' : '';
+      const s0 = i < s.currentSet ? s.sets[0][i] : s.games[0];
+      const s1 = i < s.currentSet ? s.sets[1][i] : s.games[1];
+      setHtml += '<div class="set-box' + active + '">SET ' + (i+1) + '<span class="sep">:</span>' + s0 + '<span class="sep">-</span>' + s1 + '</div>';
+    }
+  }
+  document.getElementById('setHistory').innerHTML = setHtml;
+
+  // Scored by
+  if (s.lastScoredBy) {
+    const sb = document.getElementById('scoredBy');
+    sb.textContent = 'scored by ' + s.lastScoredBy;
+    sb.classList.remove('show'); void sb.offsetWidth; sb.classList.add('show');
+  }
+
+  // Winner
+  const wo = document.getElementById('winnerOverlay');
+  if (s.matchOver) {
+    wo.classList.add('show');
+    document.getElementById('winGlowL').className = 'wgl ' + (s.winner === 0 ? 'won' : 'lost');
+    document.getElementById('winGlowR').className = 'wgr ' + (s.winner === 1 ? 'won' : 'lost');
+    const wname = s.winner === 0 ? (s.nameLeft||'TEAM 1') : (s.nameRight||'TEAM 2');
+    document.getElementById('winnerText').textContent = '🏆 ' + wname + ' WINS!';
+    document.getElementById('winnerText').style.color = s.winner === 0 ? 'var(--amber-light)' : 'var(--blue-light)';
+  } else {
+    wo.classList.remove('show');
+  }
+}
+
+connect();
+</script>
+</body>
+</html>
