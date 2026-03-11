@@ -20,7 +20,6 @@
  */
 
 #include <WiFi.h>
-#include <DNSServer.h>
 #include <ESPAsyncWebServer.h>
 #include <AsyncTCP.h>
 #include <ArduinoJson.h>
@@ -34,7 +33,6 @@ const int   MAX_CLIENTS   = 8;
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
-DNSServer dnsServer;
 
 // ===== GAME STATE =====
 struct SideInfo {
@@ -445,35 +443,9 @@ void setup() {
   IPAddress ip = WiFi.softAPIP();
   Serial.printf("WiFi AP '%s' started on %s\n", WIFI_SSID, ip.toString().c_str());
 
-  // Captive portal: resolve all DNS to this ESP32
-  dnsServer.start(53, "*", ip);
-
   // WebSocket
   ws.onEvent(onWsEvent);
   server.addHandler(&ws);
-
-  // Captive portal detection endpoints (Android, iOS, Windows)
-  server.on("/generate_204", HTTP_GET, [](AsyncWebServerRequest* request) {
-    request->redirect("http://192.168.4.1/input");
-  });
-  server.on("/gen_204", HTTP_GET, [](AsyncWebServerRequest* request) {
-    request->redirect("http://192.168.4.1/input");
-  });
-  server.on("/hotspot-detect.html", HTTP_GET, [](AsyncWebServerRequest* request) {
-    request->redirect("http://192.168.4.1/input");
-  });
-  server.on("/canonical.html", HTTP_GET, [](AsyncWebServerRequest* request) {
-    request->redirect("http://192.168.4.1/input");
-  });
-  server.on("/connecttest.txt", HTTP_GET, [](AsyncWebServerRequest* request) {
-    request->redirect("http://192.168.4.1/input");
-  });
-  server.on("/ncsi.txt", HTTP_GET, [](AsyncWebServerRequest* request) {
-    request->redirect("http://192.168.4.1/input");
-  });
-  server.on("/fwlink", HTTP_GET, [](AsyncWebServerRequest* request) {
-    request->redirect("http://192.168.4.1/input");
-  });
 
   // Routes
   server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
@@ -491,11 +463,6 @@ void setup() {
   // Serve any static files from LittleFS (CSS, JS, etc. if needed)
   server.serveStatic("/", LittleFS, "/");
 
-  // Catch-all: redirect unknown requests to input page (captive portal)
-  server.onNotFound([](AsyncWebServerRequest* request) {
-    request->redirect("http://192.168.4.1/input");
-  });
-
   server.begin();
   Serial.println("HTTP server started.");
   Serial.printf("  Display: http://%s/display\n", ip.toString().c_str());
@@ -506,7 +473,6 @@ void setup() {
 // ===== LOOP =====
 
 void loop() {
-  dnsServer.processNextRequest();
   ws.cleanupClients();
   delay(10);
 }

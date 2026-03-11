@@ -22,11 +22,19 @@
   .idle-screen.hidden{opacity:0;pointer-events:none}
   .idle-logo{font-size:4rem;margin-bottom:14px}
   .idle-subtitle{font-size:1.1rem;color:var(--text-dim);letter-spacing:5px;text-transform:uppercase;margin-bottom:50px}
-  .qr-box{text-align:center;margin-bottom:50px}
+  .idle-row{display:flex;gap:48px;align-items:center;margin-bottom:50px}
+  .qr-box{text-align:center}
   .qr-box canvas{border-radius:10px}
   .qr-label{margin-top:14px;font-size:1rem;color:var(--text-dim);letter-spacing:3px;text-transform:uppercase}
-  .wifi-info{display:flex;align-items:center;gap:10px;color:var(--text-dim);font-size:1rem}
-  .wifi-info svg{width:24px;height:24px;fill:var(--text-dim)}
+  .wifi-info{display:flex;align-items:center;gap:10px;color:var(--text-dim);font-size:.95rem;margin-top:10px}
+  .wifi-info svg{width:22px;height:22px;fill:var(--text-dim)}
+  .idle-instructions{display:flex;flex-direction:column;gap:12px}
+  .instr-title{font-family:'Orbitron',sans-serif;font-size:.75rem;letter-spacing:4px;color:#2ecc71;text-transform:uppercase;margin-bottom:4px}
+  .instr-steps{list-style:none;display:flex;flex-direction:column;gap:14px}
+  .instr-steps li{display:flex;align-items:flex-start;gap:12px;color:var(--text-dim);font-size:1rem;line-height:1.4}
+  .instr-steps li::before{content:attr(data-n);min-width:26px;height:26px;border-radius:50%;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.4);color:#2ecc71;font-size:.8rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+  .instr-steps strong{color:var(--text)}
+  .instr-steps em{color:var(--text-dim);font-style:normal;opacity:.8}
   .idle-particles{position:absolute;inset:0;overflow:hidden;pointer-events:none}
   .particle{position:absolute;width:3px;height:3px;background:var(--court-green);border-radius:50%;opacity:.3;animation:floatUp 8s linear infinite}
   @keyframes floatUp{0%{transform:translateY(100vh) scale(0);opacity:0}10%{opacity:.3}90%{opacity:.3}100%{transform:translateY(-20px) scale(1);opacity:0}}
@@ -104,13 +112,29 @@
   <div class="idle-particles" id="particles"></div>
   <div class="logo idle-logo"><span class="hex">⬡</span> PADEL SCORE</div>
   <div class="idle-subtitle">No players connected</div>
-  <div class="qr-box">
-    <div id="qrInput"></div>
-    <div class="qr-label">Scan to Connect</div>
-  </div>
-  <div class="wifi-info">
-    <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3a4.237 4.237 0 00-6 0zm-4-4l2 2a7.074 7.074 0 0110 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
-    Padel-Court-1
+  <div class="idle-row">
+    <div class="qr-box">
+      <div id="qrWifi"></div>
+      <div class="qr-label">1. Join WiFi</div>
+      <div class="wifi-info">
+        <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3a4.237 4.237 0 00-6 0zm-4-4l2 2a7.074 7.074 0 0110 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+        Padel-Court-1
+      </div>
+    </div>
+    <div class="qr-box">
+      <div id="qrUrl"></div>
+      <div class="qr-label">2. Open Scoreboard</div>
+      <div class="wifi-info" style="color:var(--amber-light)">192.168.4.1</div>
+    </div>
+    <div class="idle-instructions">
+      <div class="instr-title">How to Start</div>
+      <ol class="instr-steps">
+        <li data-n="1">Scan the <strong>green QR code</strong> to join the WiFi</li>
+        <li data-n="2">If a popup appears, close it or tap <strong>"Use without internet"</strong></li>
+        <li data-n="3">Scan the <strong>orange QR code</strong> or open a browser and go to <strong>192.168.4.1</strong></li>
+        <li data-n="4">Enter player names and tap <strong>Start Match</strong></li>
+      </ol>
+    </div>
   </div>
 </div>
 
@@ -164,7 +188,20 @@
   svg+='<rect width="'+total+'" height="'+total+'" fill="#0a0e0d" rx="10"/>';
   for(var y=0;y<size;y++)for(var x=0;x<size;x++)if(d[y*size+x])svg+='<rect x="'+(padding+x*scale)+'" y="'+(padding+y*scale)+'" width="'+scale+'" height="'+scale+'" fill="#2ecc71"/>';
   svg+='</svg>';
-  document.getElementById('qrInput').innerHTML=svg;
+  document.getElementById('qrWifi').innerHTML=svg;
+})();
+
+// ===== URL QR CODE =====
+// Pre-encoded QR for "http://192.168.4.1" (version 2, M correction, 25x25)
+(function(){
+  var d2=[1,1,1,1,1,1,1,0,1,1,0,1,1,1,0,1,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,1,0,0,1,0,1,0,1,1,0,0,0,1,0,0,0,0,0,1,1,0,1,1,1,0,1,0,0,0,1,0,1,0,1,0,0,0,1,0,1,1,1,0,1,1,0,1,1,1,0,1,0,1,0,1,1,0,0,0,0,1,0,1,0,1,1,1,0,1,1,0,1,1,1,0,1,0,1,1,1,0,1,0,1,1,0,0,1,0,1,1,1,0,1,1,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,1,1,1,1,1,1,0,1,0,1,0,1,0,1,0,1,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,0,0,1,1,1,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,1,1,1,0,0,0,1,1,0,0,1,1,1,1,1,1,0,0,1,1,1,0,0,0,1,0,0,0,1,0,0,1,1,1,1,0,1,0,1,1,1,0,1,0,0,1,1,0,1,1,1,1,0,1,1,1,1,0,0,1,1,1,0,1,0,1,1,0,0,1,1,1,1,1,0,0,0,0,1,0,1,0,0,1,0,0,1,1,0,1,0,1,1,0,0,0,1,0,0,1,1,0,1,1,1,0,0,1,1,1,0,0,1,0,0,1,1,1,1,1,1,0,1,1,1,0,0,0,1,1,0,1,0,0,1,0,0,0,1,1,0,0,1,0,0,0,0,0,1,1,1,1,0,1,0,1,1,1,1,1,1,0,1,1,0,1,1,0,0,0,0,0,1,0,1,0,1,0,0,1,1,0,1,0,1,1,1,1,0,0,1,1,1,0,1,1,1,1,0,1,1,0,1,0,0,0,1,1,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,1,1,1,1,0,0,0,1,0,1,0,0,1,1,1,1,1,1,1,0,1,0,0,0,0,0,0,0,1,0,1,0,1,1,0,0,0,1,0,0,0,0,0,1,0,0,1,1,0,1,0,1,1,1,0,0,0,1,1,1,1,1,1,0,1,1,1,0,1,0,1,0,0,1,0,1,1,0,1,1,1,1,1,0,1,0,1,1,0,1,1,1,0,1,0,0,1,0,0,1,0,0,0,1,0,1,0,0,1,1,1,1,1,0,1,1,1,0,1,0,0,1,0,1,1,1,1,0,1,0,1,0,0,0,0,1,0,1,0,0,0,0,0,1,0,0,0,0,1,0,1,0,0,0,1,0,1,1,1,1,1,0,1,1,1,1,1,1,1,0,1,0,1,0,1,1,0,0,0,1,1,0,0,0,1,1,1];
+  var size2=25,scale=7,padding=16;
+  var total=size2*scale+padding*2;
+  var svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+total+'" height="'+total+'" viewBox="0 0 '+total+' '+total+'">';
+  svg+='<rect width="'+total+'" height="'+total+'" fill="#0a0e0d" rx="10"/>';
+  for(var y=0;y<size2;y++)for(var x=0;x<size2;x++)if(d2[y*size2+x])svg+='<rect x="'+(padding+x*scale)+'" y="'+(padding+y*scale)+'" width="'+scale+'" height="'+scale+'" fill="#f5a623"/>';
+  svg+='</svg>';
+  document.getElementById('qrUrl').innerHTML=svg;
 })();
 
 // ===== PARTICLES =====
