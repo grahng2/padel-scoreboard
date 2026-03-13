@@ -355,6 +355,18 @@ void handleWebSocketMessage(AsyncWebSocketClient* client, const String& msg) {
     state.lastActivity = millis();
     broadcastState();
   }
+  else if (msg == "switchSides") {
+    pushHistory();
+    std::swap(state.sides[0], state.sides[1]);
+    std::swap(state.points[0], state.points[1]);
+    std::swap(state.games[0], state.games[1]);
+    for (int i = 0; i < 3; i++) std::swap(state.sets[0][i], state.sets[1][i]);
+    std::swap(state.tiebreakPoints[0], state.tiebreakPoints[1]);
+    state.serving = 1 - state.serving;
+    if (state.winner >= 0) state.winner = 1 - state.winner;
+    state.lastActivity = millis();
+    broadcastState();
+  }
   else if (msg.startsWith("editTeams:")) {
     String payload = msg.substring(10);
     JsonDocument doc;
@@ -439,6 +451,10 @@ void setup() {
   WiFi.mode(WIFI_AP);
   WiFi.softAP(WIFI_SSID, WIFI_PASSWORD, WIFI_CHANNEL, 0, MAX_CLIENTS);
   delay(100);
+
+  // Disable LED
+  pinMode(8, OUTPUT);
+  digitalWrite(8, HIGH);  // HIGH = off on most boards (active-low)
 
   IPAddress ip = WiFi.softAPIP();
   Serial.printf("WiFi AP '%s' started on %s\n", WIFI_SSID, ip.toString().c_str());
