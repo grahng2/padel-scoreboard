@@ -26,7 +26,7 @@
 #include <LittleFS.h>
 
 // ===== CONFIGURATION =====
-const char* WIFI_SSID     = "Padel-Court-1";
+const char* WIFI_SSID     = "padtrac-demo";
 const char* WIFI_PASSWORD = "";  // Open network (no password)
 const int   WIFI_CHANNEL  = 6;
 const int   MAX_CLIENTS   = 8;
