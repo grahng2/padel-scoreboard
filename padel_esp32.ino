@@ -1,5 +1,5 @@
 /*
- * ⬡ PADEL SCORE — ESP32 Firmware
+ * ⬡ padeltrac — ESP32 Firmware
  * 
  * Hardware: ESP32 (any variant with WiFi)
  * Dependencies (install via Arduino Library Manager):
@@ -427,7 +427,7 @@ void onWsEvent(AsyncWebSocket* server, AsyncWebSocketClient* client,
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("\n⬡ PADEL SCORE — Starting...");
+  Serial.println("\n⬡ padeltrac — Starting...");
 
   // Initialize LittleFS
   if (!LittleFS.begin(true)) {
